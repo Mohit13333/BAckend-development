@@ -1,5 +1,5 @@
 import asyncHandler from '../utils/asyncHandler.js';
-import ApiError from "../utils/ApiError.js";
+import ApiError from "../utils/apiError.js";
 import User from "../models/user.model.js";
 import uploadOnCloudinary from "../utils/cloudinary.js";
 import ApiRespone from "../utils/ApiResponse.js";
@@ -260,6 +260,7 @@ const updateAvatar=asyncHandler(async(req, res)=>{
   if (!avatar.url) {
     throw new ApiError(400,"error while uploading on avatar")
   }
+  const avatarToDelete = user.avatar.public_id;
   const user=await User.findByIdAndUpdate(
     req.user?._id,
     {
@@ -268,7 +269,11 @@ const updateAvatar=asyncHandler(async(req, res)=>{
       }
     },
     {new:true}
-  ).select("-password")
+  ).select("-password");
+  if (avatarToDelete && updatedUser.avatar.public_id) {
+    await deleteOnCloudinary(avatarToDelete);
+}
+
 
   return res.status(200)
   .json(
@@ -285,6 +290,7 @@ const updateCoverImage=asyncHandler(async(req, res)=>{
   if (!coverImage.url) {
     throw new ApiError(400,"error while uploading on Cover-Image")
   }
+  const coverImageToDelete = user.coverImage.public_id;
   const user=await User.findByIdAndUpdate(
     req.user?._id,
     {
@@ -293,7 +299,10 @@ const updateCoverImage=asyncHandler(async(req, res)=>{
       }
     },
     {new:true}
-  ).select("-password")
+  ).select("-password");
+  if (coverImageToDelete && updatedUser.coverImage.public_id) {
+    await deleteOnCloudinary(coverImageToDelete);
+}
 
   return res.status(200)
   .json(
